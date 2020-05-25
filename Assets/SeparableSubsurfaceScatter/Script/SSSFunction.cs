@@ -22,6 +22,11 @@ public static class SSSFunction
 
     public static void ClearBuffer(ref SkinRender skr)
     {
+        if (skr.SubsurfaceBuffer == null)
+        {
+            return;
+        }
+        
         skr.SubsurfaceBuffer.Clear();
         skr.SubsurfaceBuffer.GetTemporaryRT(ShaderIDs._SceneColor, skr.RenderCamera.pixelWidth, skr.RenderCamera.pixelHeight, 0, FilterMode.Point, RenderTextureFormat.DefaultHDR);
     }
@@ -33,7 +38,7 @@ public static class SSSFunction
         SeparableSSS.CalculateKernel(kernel, 11, SSSC, SSSFC);
     }
 
-    public static void UpdateSubsurface(ref SkinRender skr, ref SkinData data, List<Vector4> kernelArray)
+    public static void UpdateSubsurface(ref SkinRender skr, ref SkinData data, ref Renderer renderer, List<Vector4> kernelArray)
     {
         ///SSS Buffer
         skr.SubsurfaceBuffer.SetGlobalFloat(ShaderIDs._SSSScale, data.SubsurfaceScaler);
@@ -41,24 +46,14 @@ public static class SSSFunction
         skr.SubsurfaceBuffer.SetGlobalFloat(ShaderIDs._RandomNumber, Random.Range(0f, 1000f));
         skr.SubsurfaceBuffer.SetGlobalTexture(ShaderIDs._MainTex, BuiltinRenderTextureType.CameraTarget);
         skr.SubsurfaceBuffer.SetRenderTarget(ShaderIDs._SceneColor, BuiltinRenderTextureType.CameraTarget);
-        skr.SubsurfaceBuffer.DrawRenderer(data.renderer, skr.SubsurfaceEffects, 0, 0);
+        skr.SubsurfaceBuffer.DrawRenderer(renderer, skr.SubsurfaceEffects, 0, 0);
         skr.SubsurfaceBuffer.SetGlobalFloat(ShaderIDs._RandomNumber, Random.Range(0f, 1000f));
         skr.SubsurfaceBuffer.SetGlobalTexture(ShaderIDs._MainTex, ShaderIDs._SceneColor);
         skr.SubsurfaceBuffer.SetRenderTarget(BuiltinRenderTextureType.CameraTarget);
-        skr.SubsurfaceBuffer.DrawRenderer(data.renderer, skr.SubsurfaceEffects, 0, 1);
+        skr.SubsurfaceBuffer.DrawRenderer(renderer, skr.SubsurfaceEffects, 0, 1);
     }
 }
 
-[System.Serializable]
-public struct SkinData
-{
-    [Range(0, 5)]
-    public float SubsurfaceScaler;
-    public Color SubsurfaceColor;
-    public Color SubsurfaceFalloff;
-    [System.NonSerialized]
-    public Renderer renderer;
-}
 
 public struct SkinRender
 {
